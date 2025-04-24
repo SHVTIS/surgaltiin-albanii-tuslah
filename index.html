@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+  <meta charset="UTF-8" />
+  <title>Сургалтын албаны туслах | ШУТИС</title>
+  <link rel="icon" href="images/logo.png copy.jpg" />
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background-color: #f7f9fb; }
+    .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .header { text-align: center; margin-bottom: 20px; }
+    .logo { height: 60px; }
+    #chatbox { border: 1px solid #ccc; border-radius: 10px; padding: 10px; height: 300px; overflow-y: scroll; margin-bottom: 10px; background-color: #fff; }
+    .message { margin: 5px 0; }
+    .bot { color: #10b981; }
+    .user { text-align: right; color: #2563eb; }
+    #inputBox, #schoolSelect { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #ccc; margin-top: 10px; }
+  </style>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-analytics-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <img src="images/logo.png copy.jpg" alt="ШУТИС Лого" class="logo">
+      <h1>Сургалтын албаны туслах</h1>
+    </div>
+
+    <label for="schoolSelect"><strong>Та өөрийн сургууль сонгоно уу:</strong></label>
+    <select id="schoolSelect" onchange="selectSchool()">
+      <option disabled selected>-- Сургууль сонгоно уу --</option>
+      <option>Барилга, архитектурын сургууль</option>
+      <option>Нийгэм, хүмүүнлэгийн сургууль</option>
+      <option>Механик инженер, тээврийн сургууль</option>
+      <option>Менежментийн сургууль</option>
+      <option>Геологи, уул уурхайн сургууль</option>
+      <option>Мэдээлэл, холбооны технологийн сургууль</option>
+      <option>Хүнс, хөнгөн үйлдвэрлэл, дизайны сургууль</option>
+      <option>Эрчим хүчний инженерчлэлийн сургууль</option>
+      <option>Дархан-Уул аймаг дахь технологийн сургууль</option>
+      <option>"Эрдэнэт цогцолбор" дээд сургууль</option>
+      <option>Гадаад хэлний сургууль</option>
+      <option>Өмнөговь аймаг дахь технологийн дээд сургууль</option>
+      <option>ШУТИС-ийн харьяа ЕБС</option>
+      <option>ШУТИС-Коосэн технологийн коллеж</option>
+      <option>Ахисан түвшний сургууль</option>
+    </select>
+
+    <div id="chatbox">
+      <div class="message bot">Сайн байна уу! Та эхлээд өөрийн сургууль сонгоно уу.</div>
+    </div>
+
+    <input id="inputBox" type="text" placeholder="Асуултаа бичнэ үү..." onkeydown="if(event.key==='Enter') sendMessage()" />
+  </div>
+
+  <!-- Firebase init -->
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCu4W91DXKZMXCQWMkoxUfQmeGmN2qY89Q",
+      authDomain: "my-must-help.firebaseapp.com",
+      projectId: "my-must-help",
+      storageBucket: "my-must-help.appspot.com",
+      messagingSenderId: "615604955264",
+      appId: "1:615604955264:web:60fe30add245d28f411e65",
+      measurementId: "G-YN3DV4QRLV",
+      databaseURL: "https://my-must-help-default-rtdb.asia-southeast1.firebasedatabase.app"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const analytics = firebase.analytics();
+    const database = firebase.database();
+  </script>
+
+  <!-- Chatbot logic -->
+  <script>
+    const chatbox = document.getElementById('chatbox');
+    const inputBox = document.getElementById('inputBox');
+    let selectedSchool = "";
+
+    function selectSchool() {
+      const select = document.getElementById('schoolSelect');
+      selectedSchool = select.value;
+      chatbox.innerHTML += `<div class="message bot">Та <strong>${selectedSchool}</strong>-ийг сонголоо. Одоо асуултаа бичнэ үү.</div>`;
+      chatbox.scrollTop = chatbox.scrollHeight;
+    }
+
+    function sendMessage() {
+      const userInput = inputBox.value.trim();
+      if (!userInput) return;
+
+      chatbox.innerHTML += `<div class="message user">${userInput}</div>`;
+      const reply = getBotReply(userInput.toLowerCase());
+      chatbox.innerHTML += `<div class="message bot">${reply}</div>`;
+      inputBox.value = '';
+      chatbox.scrollTop = chatbox.scrollHeight;
+
+      const messageData = {
+        question: userInput,
+        answer: reply,
+        school: selectedSchool || "Сонгогдоогүй",
+        timestamp: new Date().toISOString()
+      };
+      database.ref("chatMessages").push(messageData);
+    }
+
+    function getBotReply(input) {
+      if (!selectedSchool) {
+        return "Эхлээд та өөрийн сургууль сонгоно уу.";
+      }
+
+      if (selectedSchool === "Барилга, архитектурын сургууль") {
+        if (input.includes("төлбөр")) return "2019-2020, 2020-2021, 2021-2022 оны хичээлийн жилд элссэн оюутан: 1 кредит = 111.675₮, 2022-2023 оны хичээлийн жилд элссэн оюутан 1 кредит = 147.711₮, 2023-2024 оны хичээлийн жилд элссэн оюутан 1 кредит = 157.274₮";
+        if (input.includes("дансны дугаар")) return "ХХБ	800024747 Хүлээн авагч байгууллаггын нэр: Барилга Архитектурын Сургууль";
+        if (input.includes("шалгалт")) return "Шалгалтын хуваарь 6-р сарын 5-нд эхэлнэ.";
+      }
+
+      if (selectedSchool === "Механик инженер, тээврийн сургууль") {
+        if (input.includes("төлбөр")) return "Механикийн сургалтын төлбөр: 1 кредит = 88,000₮.";
+        if (input.includes("сонголт")) return "Хичээл сонголт SIS систем дээр хийгдэнэ.";
+      }
+
+      if (selectedSchool === "Нийгэм, хүмүүнлэгийн сургууль") {
+        if (input.includes("төлбөр")) return "2019-2020, 2020-2021, 2021-2022 оны хичээлийн жилд элссэн оюутан: 1 кредит = 109.215₮, 2022-2023 оны хичээлийн жилд элссэн оюутан 1 кредит = 143.479₮, 2023-2024 оны хичээлийн жилд элссэн оюутан 1 кредит = 153.810₮";
+        if (input.includes("дансны дугаар")) return "2611184512 ХХБ Хүлээн авагч байгууллаггын нэр: ШУТИС БУХС";
+      }
+
+      if (selectedSchool === "Эрчим хүчний инженерчлэлийн сургууль") {
+        if (input.includes("төлбөр")) return "2019-2020, 2020-2021, 2021-2022 оны хичээлийн жилд элссэн оюутан: 1 кредит = 111.675₮, 2022-2023 оны хичээлийн жилд элссэн оюутан 1 кредит = 146.711₮, 2023-2024 оны хичээлийн жилд элссэн оюутан 1 кредит = 157.274₮";
+        if (input.includes("дансны дугаар")) return "Голомт банк	8115007022 Хүлээн авагч байгууллаггын нэр: ШУТИС ЭХС";
+      }
+
+      if (selectedSchool === "Геологи, уул уурхайн сургууль") {
+        if (input.includes("төлбөр")) return "2019-2020, 2020-2021, 2021-2022 оны хичээлийн жилд элссэн оюутан: 1 кредит = 111.675₮, 2022-2023 оны хичээлийн жилд элссэн оюутан 1 кредит = 146.711₮, 2023-2024 оны хичээлийн жилд элссэн оюутан 1 кредит = 157.274₮";
+        if (input.includes("дансны дугаар")) return "Голомт банк	8115007020 Хүлээн авагч байгууллаггын нэр: ШУТИС ГУУС";
+      }
+
+      if (input.includes("сургалтын алба") || input.includes("утас")) {
+        return `${selectedSchool}-ийн сургалтын албаны утас: 7510-0777`;
+      }
+
+      if (input.includes("төлбөр төлөхдөө ") || input.includes("гүйлгээний утга")) {
+        return `${selectedSchool}-ийн ST оюутны код /B англиар/, оюутны овог, нэр, регистрийг кирилл үсгээр, гар утасны дугаараа бичнэ.`;
+      }
+
+      return "Таны асуулттай холбоотой мэдээлэл олдсонгүй. Та өөрөөр асуугаарай.";
+    }
+  </script>
+</body>
+</html>
